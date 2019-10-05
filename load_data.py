@@ -13,6 +13,7 @@ def get_images(paths, labels, nb_samples=None, shuffle=True):
         paths: A list of character folders
         labels: List or numpy array of same length as paths
         nb_samples: Number of images to retrieve per character
+        shuffle: Shuffle the examples.
     Returns:
         List of (label, image_path) tuples
     """
@@ -87,6 +88,7 @@ class DataGenerator(object):
         Samples a batch for training, validation, or testing
         Args:
             batch_type: train/val/test
+            batch_size: batch size
         Returns:
             A a tuple of (1) Image batch and (2) Label batch where
             image batch has shape [B, K, N, 784] and label batch has shape [B, K, N, N]
@@ -101,7 +103,34 @@ class DataGenerator(object):
 
         #############################
         #### YOUR CODE GOES HERE ####
-        pass
+        for batch_idx in range(batch_size):
+            # sample with replacement per batch.
+            # sample n different classes from different characters.
+            classes_idx = np.random.choice(len(folders), self.num_classes, replace=False)
+            paths_to_sample = [folders[i] for i in classes_idx.tolist()]
+
+            # sample k examples of each character.
+            one_hot_mat = np.eye(self.num_classes)
+            label_path_mapping = get_images(paths_to_sample, one_hot_mat, nb_samples=self.num_samples_per_class)
+
+            all_image_batches = np.zeros((batch_size, self.num_samples_per_class, self.num_classes, 784))
+            all_label_batches = np.zeros((batch_size, self.num_samples_per_class, self.num_classes, self.num_classes))
+
+            one_hot_to_class_map = {i: self.num_samples_per_class-1 for i in range(self.num_classes)}
+
+            for one_hot_label, img_path in label_path_mapping:
+                # get image
+                img_np = image_file_to_array(img_path, 784)
+
+                # input [batch idx, sample idx, class idx, dat]
+                n = np.where(one_hot_label == 1)[0][0]
+                k = one_hot_to_class_map[n]
+
+                all_image_batches[batch_idx, k, n, :] = img_np
+                all_label_batches[batch_idx, k, n, :] = one_hot_label
+
+                one_hot_to_class_map[n] -= 1
+
         #############################
 
         return all_image_batches, all_label_batches

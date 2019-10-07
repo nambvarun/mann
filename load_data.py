@@ -103,7 +103,12 @@ class DataGenerator(object):
 
         #############################
         #### YOUR CODE GOES HERE ####
+        all_image_batches = np.zeros((batch_size, self.num_samples_per_class, self.num_classes, 784))
+        all_label_batches = np.zeros((batch_size, self.num_samples_per_class, self.num_classes, self.num_classes))
+
         for batch_idx in range(batch_size):
+            _shuffle = True
+
             # sample with replacement per batch.
             # sample n different classes from different characters.
             classes_idx = np.random.choice(len(folders), self.num_classes, replace=False)
@@ -111,10 +116,7 @@ class DataGenerator(object):
 
             # sample k examples of each character.
             one_hot_mat = np.eye(self.num_classes)
-            label_path_mapping = get_images(paths_to_sample, one_hot_mat, nb_samples=self.num_samples_per_class)
-
-            all_image_batches = np.zeros((batch_size, self.num_samples_per_class, self.num_classes, 784))
-            all_label_batches = np.zeros((batch_size, self.num_samples_per_class, self.num_classes, self.num_classes))
+            label_path_mapping = get_images(paths_to_sample, one_hot_mat, nb_samples=self.num_samples_per_class, shuffle=_shuffle)
 
             one_hot_to_class_map = {i: self.num_samples_per_class-1 for i in range(self.num_classes)}
 
@@ -131,6 +133,22 @@ class DataGenerator(object):
 
                 one_hot_to_class_map[n] -= 1
 
+            if _shuffle:
+                all_image_batches_shuffled = np.zeros_like(all_image_batches[batch_idx, :, :, :])
+                all_label_batches_shuffled = np.zeros_like(all_label_batches[batch_idx, :, :, :])
+
+                for train_example in range(self.num_samples_per_class):
+                    new_order = np.random.choice(self.num_classes, self.num_classes, replace=False).tolist()
+
+                    for unshuffled_ind, shuffled_ind in enumerate(new_order):
+                        all_image_batches_shuffled[train_example, shuffled_ind, :] = all_image_batches[batch_idx, train_example, unshuffled_ind, :]
+                        all_label_batches_shuffled[train_example, shuffled_ind, :] = all_label_batches[batch_idx, train_example, unshuffled_ind, :]
+
+                all_image_batches[batch_idx, :, :, :] = all_image_batches_shuffled
+                all_label_batches[batch_idx, :, :, :] = all_label_batches_shuffled
         #############################
 
         return all_image_batches, all_label_batches
+
+dg = DataGenerator(3, 2)
+dg.sample_batch('test', 1)

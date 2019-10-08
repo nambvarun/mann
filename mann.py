@@ -103,7 +103,10 @@ loss = loss_function(out, labels)
 optim = tf.train.AdamOptimizer(0.0001)
 optimizer_step = optim.minimize(loss)
 
-with tf.Session() as sess:
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
+
+with tf.Session(config=config) as sess:
     sess.run(tf.local_variables_initializer())
     sess.run(tf.global_variables_initializer())
 
@@ -122,4 +125,8 @@ with tf.Session() as sess:
             pred = pred.reshape(-1, FLAGS.num_samples + 1, FLAGS.num_classes, FLAGS.num_classes)
             pred = pred[:, -1, :, :].argmax(2)
             l = l[:, -1, :, :].argmax(2)
-            print("Test Accuracy", (1.0 * (pred == l)).mean())
+            accuracy = (1.0 * (pred == l)).mean()
+            print("Test Accuracy", accuracy)
+
+            with open('outputs/{k}-{w}-{m}.txt'.format(m=FLAGS.meta_batch_size, k=FLAGS.num_samples, w=FLAGS.num_classes), 'a') as fh:
+                fh.write("{iter}, {train}, {test}, {acc}\n".format(iter=step, train=ls, test=tls, acc=accuracy))

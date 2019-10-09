@@ -11,6 +11,8 @@ def get_params(p: argparse.ArgumentParser) -> argparse.Namespace:
 
 
 def parse_and_gen_plots(rel_folder_path: str) -> None:
+    sns.set()
+
     for output in os.listdir(rel_folder_path):
         file = os.path.join(rel_folder_path, output)
 
@@ -19,7 +21,7 @@ def parse_and_gen_plots(rel_folder_path: str) -> None:
         except pd_errors.ParserError:
             continue
 
-        g = sns.relplot(x='iterations', y='accuracy', kind='line', data=output_df)
+        g = sns.relplot(x='iterations', y='accuracy', kind='line', data=output_df, aspect=1.5)
         g.fig.autofmt_xdate()
         g.savefig(os.path.join(rel_folder_path, 'figures', '{fh}.png'.format(fh=output.split('.')[0])))
 

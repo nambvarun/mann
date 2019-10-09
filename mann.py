@@ -19,6 +19,9 @@ flags.DEFINE_integer('meta_batch_size', 16,
 flags.DEFINE_string('output_folder', 'outputs',
                     'The folder where model perf is stored as a csv [iter, train loss, train loss, test accuracy].')
 
+flags.DEFINE_integer('hidden_state_size', 128,
+                     'Size of the hidden layer for the first LSTM.')
+
 
 def loss_function(preds, labels):
     """
@@ -49,7 +52,7 @@ class MANN(tf.keras.Model):
         super(MANN, self).__init__()
         self.num_classes = num_classes
         self.samples_per_class = samples_per_class
-        self.layer1 = tf.keras.layers.LSTM(128, return_sequences=True)
+        self.layer1 = tf.keras.layers.LSTM(FLAGS.hidden_state_size, return_sequences=True)
         self.layer2 = tf.keras.layers.LSTM(num_classes, return_sequences=True)
 
     def call(self, input_images, input_labels):
@@ -131,6 +134,7 @@ with tf.Session(config=config) as sess:
             accuracy = (1.0 * (pred == l)).mean()
             print("Test Accuracy", accuracy)
 
-            with open('{folder}/{k}-{w}-{m}.txt'.format(folder=FLAGS.output_folder, m=FLAGS.meta_batch_size,
-                                                        k=FLAGS.num_samples, w=FLAGS.num_classes), 'a') as fh:
+            with open('{folder}/{k}-{w}-{hs}-{m}.txt'.format(folder=FLAGS.output_folder, m=FLAGS.meta_batch_size,
+                                                             k=FLAGS.num_samples, w=FLAGS.num_classes,
+                                                             hs=FLAGS.hidden_state_size), 'a') as fh:
                 fh.write("{iter}, {train}, {test}, {acc}\n".format(iter=step, train=ls, test=tls, acc=accuracy))

@@ -12,6 +12,7 @@ def get_params(p: argparse.ArgumentParser) -> argparse.Namespace:
 
 def parse_and_gen_plots(rel_folder_path: str) -> None:
     sns.set()
+    sns.set_context("notebook")
 
     for output in os.listdir(rel_folder_path):
         file = os.path.join(rel_folder_path, output)

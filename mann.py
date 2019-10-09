@@ -16,6 +16,9 @@ flags.DEFINE_integer('num_samples', 1,
 flags.DEFINE_integer('meta_batch_size', 16,
                      'Number of N-way classification tasks per batch')
 
+flags.DEFINE_string('output_folder', 'outputs',
+                    'The folder where model perf is stored as a csv [iter, train loss, train loss, test accuracy].')
+
 
 def loss_function(preds, labels):
     """
@@ -128,5 +131,6 @@ with tf.Session(config=config) as sess:
             accuracy = (1.0 * (pred == l)).mean()
             print("Test Accuracy", accuracy)
 
-            with open('outputs/{k}-{w}-{m}.txt'.format(m=FLAGS.meta_batch_size, k=FLAGS.num_samples, w=FLAGS.num_classes), 'a') as fh:
+            with open('{folder}/{k}-{w}-{m}.txt'.format(folder=FLAGS.output_folder, m=FLAGS.meta_batch_size,
+                                                        k=FLAGS.num_samples, w=FLAGS.num_classes), 'a') as fh:
                 fh.write("{iter}, {train}, {test}, {acc}\n".format(iter=step, train=ls, test=tls, acc=accuracy))
